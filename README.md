@@ -1,6 +1,7 @@
 # Conjur Hubot Changelog
 
 * Added Github integration
+* Testing Hubot commit message
 
 # Hubot
 

@@ -94,9 +94,8 @@ class Relay
 
 		relayed.once 'error', onerror
 		req.once 'error', onerror
-
+		req.pause()
 		req.pipe relayed
-		req.resume()
 
 	listRelays: (msg) =>
 		hrefs = Object.keys @urls

@@ -89,15 +89,11 @@ class Relay
 			@robot.logger.error "relay error: #{error}"
 			@addError(error)
 
-		onend = =>
-			relayed.end()
-
 		@robot.logger.debug "relaying request #{options.method} #{options.path} to #{url.href}"
 		relayed = createRequest options, onresponse
 
 		relayed.once 'error', onerror
 		req.once 'error', onerror
-		req.once 'end', onend
 
 		req.pipe relayed
 		req.resume()

@@ -94,7 +94,8 @@ class Relay
 
 		relayed.once 'error', onerror
 		req.once 'error', onerror
-		req.pause()
+		#req.pause()
+
 		req.pipe relayed
 
 	listRelays: (msg) =>

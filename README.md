@@ -2,7 +2,7 @@
 
 Conjur's Hubot is designed to help us with development operations by tying together Github, Campfire, Basecamp, Jenkins, etc.
 
-To make it easy to create and modify Hubot plugins, we have created the Hubot relay.
+To make it easy to create and modify Hubot plugins, we have created the Hubot relay. The Hubot relay forwards all requests from one Hubot to another.
 
 # Conjur Hubot Changelog
 

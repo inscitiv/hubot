@@ -1,3 +1,7 @@
+# Overview
+
+Conjur's Hubot is designed to help us with development operations by tying together Github, Campfire, Basecamp, Jenkins, etc.
+
 # Conjur Hubot Changelog
 
 * Added relay.coffee

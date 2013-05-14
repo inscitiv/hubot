@@ -1,1 +1,6 @@
-["github-commits.coffee", "redis-brain.coffee", "tweet.coffee", "shipit.coffee"]
+[
+    "github-commits.coffee",
+    "redis-brain.coffee",
+    "http-say.coffee",
+    "http-post-say.coffee"
+]

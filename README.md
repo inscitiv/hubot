@@ -1,5 +1,6 @@
 # Conjur Hubot Changelog
 
+* Added relay.coffee
 * Added Github integration
 * Testing Hubot commit message
 

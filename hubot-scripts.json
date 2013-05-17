@@ -2,5 +2,6 @@
     "github-commits.coffee",
     "redis-brain.coffee",
     "http-say.coffee",
-    "http-post-say.coffee"
+    "http-post-say.coffee",
+    "jenkins.coffee"
 ]

@@ -85,6 +85,8 @@ class Relay
       full = "#{url.href + req.url.substr(1)} responded #{code} #{Http.STATUS_CODES[code]}"
       @robot.logger.info full
       if code != 200 then @addError full
+      if code in [301,302]
+        @robot.logger.info "redirected, showing headers\n#{Util.format response.headers}"
 
     onerror = (error) =>
       @robot.logger.error "relay error: #{error}"

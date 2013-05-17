@@ -41,132 +41,68 @@ parseUrl = (url) ->
 
 class Relay
   constructor: (@robot) ->
-    @urls =
-    {}
+    @urls = {}
     @errors = []
     @robot.brain.once 'loaded', @brainLoaded
 
     @robot.respond /relay on (\S+)/i, @enableRelay
-    @robot.respond /relay off(?: (\S+))?/i, @disableRelay
-    @robot.respond /relay list/i, @listRelays
-    @robot.respond /relay errors/i, @showErrors
-    @robot.respond /relay clear errors/i, @clearErrors
+    @robot.respond /relay off/i, @disableRelay
+    @robot.respond /relay info/i, @showRelay
 
     @robot.router.use @relayRequest
     # hack: make this the first middleware so it's always called
     @robot.router.stack.unshift @robot.router.stack.pop()
 
-
-
   brainLoaded: (data) =>
     relayData = data.relay ||= {}
-    @urls = relayData.urls ||= {}
-    @errors = relayData.errors ||= []
+    @url = relayData.url
 
 
-  relayRequest: (req, res, next)=>
-    try
-      @doRelayRequest.apply @, arguments
-    finally
-      next() if typeof next is 'function'
-
-  doRelayRequest: (req, res, next) ->
-    for href, url of @urls
-      @relayRequestTo(url, req, res)
-
-  relayRequestTo: (url, req, res) ->
+  relayRequest: (req, res, next) =>
+    {url} = @
+    return next() unless url
     options = _.extend {}, url,
       method: req.method
       path: req.url
       headers: @relayHeaders req.headers, url
 
-    onresponse = (response) =>
-      code = response.statusCode
-      full = "#{url.href + req.url.substr(1)} responded #{code} #{Http.STATUS_CODES[code]}"
-      @robot.logger.info full
-      if code != 200 then @addError full
-      if code in [301,302]
-        @robot.logger.info "redirected, showing headers\n#{Util.format response.headers}"
+    callback = (fwdres) =>
+      @robot.logger.debug "got relay response #{fwdres.statusCode} from #{url.href}"
+      @robot.logger.debug "headers: #{Util.format fwdres.headers}"
 
     onerror = (error) =>
-      @robot.logger.error "relay error: #{error}"
-      @addError(error)
+      @robot.logger.error "error in relay to #{url.href}: #{error}"
 
-    ondata = (chunk) =>
-      relayed.write chunk
-
-    @robot.logger.debug "relaying request #{options.method} #{options.path} to #{url.href}"
-    relayed = createRequest options, onresponse
-
-    relayed.once 'error', onerror
-    req.once 'error', onerror
-    req.on 'data', ondata
+    fwd = createRequest(options, callback)
+    req.on 'end', -> fwd.end()
+    req.on 'error', onerror
+    fwd.on 'error', onerror
+    req.on 'data', (chunk) -> fwd.write(chunk)
     req.resume()
+    next()
 
   relayHeaders: (originalHeaders, destUrl) =>
     headers = _.clone originalHeaders
     headers.host = destUrl.hostname
     headers
 
-
-  listRelays: (msg) =>
-    hrefs = Object.keys @urls
-    if hrefs.length == 0
-      msg.send "No relays are enabled"
-    else
-      resp = ["Relaying requests to the following hosts:"]
-      hrefs.forEach (href) ->
-        resp.push "\t#{href}"
-      msg.send resp.join "\n"
-
-
   enableRelay: (msg) =>
-    url = parseUrl msg.match[1]
-    if url.href in @urls
-      msg.send("Relay to #{url.href} is already enabled")
-    else
-      @urls[url.href] = url
-      msg.send("Enabled relay to #{url.href}")
+    @url = parseUrl msg.match[1]
+    @robot.brain.data.relay.url = @url
     @robot.brain.save()
+    msg.send "relaying requests to #{@url.href}"
 
   disableRelay: (msg) =>
-    if msg.match[1]?
-      url = parseUrl msg.match[1]
-      if @urls[url.href]?
-        delete @urls[url.href]
-        msg.send "Disabled relay to #{url.href}"
-      else
-        msg.send "Relay to #{url.href} is not enabled"
+    @url = null
+    @robot.brain.data.relay.url = null
+    @robot.brain.save()
+    @msg.send "relay is off"
+
+  showRelay: (msg) =>
+    if @url
+      msg.send "relaying requests to #{@url.href}"
     else
-      keys = Object.keys @urls
-      if keys.length == 0
-        msg.send "No relays are enabled"
-      else
-        reply = ["Disabled the following relays:"]
-        keys.forEach (href) =>
-          delete @urls[href]
-          reply.push("\t#{href}")
-        msg.send reply.join("\n")
-    @robot.brain.save()
-
-  showErrors: (msg) =>
-    reply = ["Relay errors:"]
-    @errors.forEach (err) ->
-      reply.push "\t#{err.what} at #{err.when}"
-    msg.send reply.join "\n"
-
-  clearErrors: (msg) =>
-    reply = "Relay deleted #{@errors.length} errors"
-    @errors.length = 0
-    @robot.brain.save()
-    msg.send reply
-
-  addError: (err) =>
-    err ?= "Unknown Error WTF!"
-    @errors.push {what: err.toString(), when: new Date().toString()}
-    if @errors.length >= process.env.HUBOT_RELAY_MAX_ERRORS ? 20
-      @errors.shift()
-    @robot.brain.save()
+      msg.send "relay is off"
 
 module.exports = (robot) ->
   new Relay(robot)

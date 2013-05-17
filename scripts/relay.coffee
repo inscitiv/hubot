@@ -60,7 +60,7 @@ class Relay
 
   relayRequest: (req, res, next) =>
     {url} = @
-    return next() unless url
+    return next() unless url 
     options = _.extend {}, url,
       method: req.method
       path: req.url

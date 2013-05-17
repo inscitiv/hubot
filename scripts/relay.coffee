@@ -101,6 +101,7 @@ class Relay
     relayed.once 'error', onerror
     req.once 'error', onerror
     req.on 'data', ondata
+    req.resume()
 
   relayHeaders: (originalHeaders, destUrl) =>
     headers = _.clone originalHeaders

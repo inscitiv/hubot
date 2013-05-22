@@ -96,7 +96,7 @@ class Relay
     @url = null
     @robot.brain.data.relay.url = null
     @robot.brain.save()
-    @msg.send "relay is off"
+    msg.send "relay is off"
 
   showRelay: (msg) =>
     if @url

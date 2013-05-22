@@ -14,6 +14,8 @@
 #   HUBOT_BASECAMP_ACCOUNT      -  Your basecamp account, 11111111 in the above url
 #   HUBOT_BASECAMP_PROJECT      -  Your basecamp project, 22222222 in the above url
 # 
+#   HUBOT_TODOS_ROOM   - A room id where we anounce completed todos.  
+#                         Leave this blank if you don't want to hear about that.
 # Commands:
 #   None
 #
@@ -104,13 +106,13 @@ class GithubBasecampTodos
       @robot.logger.error "Error #{err} while closing todo"
     if res.statusCode != 200
       @robot.logger.error "Basecamp returned status code #{res.statusCode} #{STATUS_CODES[res.statusCode]}"
-    if res.body?
+    if body?
       try
-        json = JSON.parse res.body
-        if json.complete?
-          @robot.logger.info "TODO #{json.id} is now complete: #{json.complete}"
+        json = JSON.parse body
+        if json.completed?
+          @robot.logger.info "Basecamp TODO##{json.id} is now completed: #{json.completed}"
         else
-          @robot.logger.warn "Got funny response from basecamp: #{Util.inspect json}"
+          @robot.logger.error "Got funny response from basecamp: #{Util.inspect json}"
       catch e
         @robot.logger.error "Error parsing basecamp response JSON: #{e}"
         return

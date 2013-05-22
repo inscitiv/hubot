@@ -15,7 +15,7 @@
 #   HUBOT_BASECAMP_PROJECT      -  Your basecamp project, 22222222 in the above url
 # 
 #   HUBOT_TODOS_ROOM   - A room id where we anounce completed todos.  
-#                         Leave this blank if you don't want to hear about that.
+#                       Leave this blank if you don't want to hear about that.
 # Commands:
 #   None
 #

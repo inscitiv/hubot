@@ -9,7 +9,7 @@ To make it easy to create and modify Hubot plugins, we have created the Hubot re
 * Added relay.coffee
 * Added Github integration
 * Testing Hubot commit message
-
+* Testing it again ;)
 # Hubot
 
 This is a version of GitHub's Campfire bot, hubot. He's pretty cool.

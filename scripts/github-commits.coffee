@@ -27,7 +27,7 @@ module.exports = (robot) ->
   robot.router.post "/hubot/gh-commits", (req, res) ->
     query = querystring.parse(url.parse(req.url).query)
 
-    res.end
+    res.end()
 
     user = {}
     user.room = query.room if query.room
@@ -37,6 +37,9 @@ module.exports = (robot) ->
       payload = JSON.parse req.body.payload
       
       console.log payload
+      robot.emit 'github:post', payload
+
+     
 
       if payload.commits.length > 0
         robot.send user, "Got #{payload.commits.length} new commits from #{payload.commits[0].author.name} on #{payload.repository.name}"

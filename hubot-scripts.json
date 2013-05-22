@@ -2,5 +2,6 @@
     "redis-brain.coffee",
     "http-say.coffee",
     "http-post-say.coffee",
-    "jenkins.coffee"
+    "jenkins.coffee",
+    "script.coffee"
 ]

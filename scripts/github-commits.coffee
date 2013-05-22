@@ -36,7 +36,6 @@ module.exports = (robot) ->
     try
       payload = JSON.parse req.body.payload
       
-      console.log payload
       robot.emit 'github:post', payload
 
      

@@ -41,8 +41,12 @@ class GithubBasecampTodos
     
   commandHandler: (msg) =>
     id = msg.match[1]
-    msg.reply "ok, trying to finish #{id}"
-    @closeTodo(id)
+    msg.reply "OK, trying to finish TODO #{id}"
+    @closeTodo id, (err, res) =>
+      if err
+        msg.send "And...FAIL! I couldn't complete your TODO #{id}: #{err}"
+      else
+        msg.send "Hooray, TODO #{id} is complete!!"
     
   postHandler: (req,res) =>
     res.end()
@@ -73,25 +77,47 @@ class GithubBasecampTodos
     _.each commits, @processCommit
     @todoIds = _.uniq @todoIds, _.identity
     @robot.logger.debug "got #{Util.inspect @todoIds} todos"
-    _.each @todoIds, @closeTodo
-    
+    _.each @todoIds, (id) =>
+      @spam "Got commit with magic text, trying to complete the basecamp todo #{id}"
+      @closeTodo id, (err, res) =>
+        if err
+          @robot.loger.error("Closing todo: #{err}")
+          @spam "Oh hamburgers! I couldn't complete TODO #{id} because of #{err}"
+        else
+          @spam "Hooray, TODO #{id} is complete!"
+
+  spam: (text, room) =>
+    if arguments.length < 2
+      rooms = process.env.HUBOT_TODO_ROOMS?.split(',')
+      if rooms?.length
+        rooms.forEach (room) =>
+          @spam(text, room)
+    else
+      user = {room : room}
+      @robot.send user, text
+
   processCommit: (commit) =>
     hot_text = /BC#(\d+)/ig 
     if (msg = commit.message)?
       while (match = hot_text.exec(msg))?
         @todoIds.push match[1]
     
-  closeTodo: (id) =>
-    pass = process.env.BASECAMP_PASSWORD
-    user = process.env.BASECAMP_USERNAME
-    auth = new Buffer("#{user}:#{pass}").toString('base64') 
-    @robot.logger.debug("using basic-auth:#{user}:#{pass}")
-    @robot.logger.debug("sending to: #{@todoUrl(id)}")
+  closeTodo: (id, cb) =>
+    @robot.logger.debug("Closing Basecamp TODO: #{@todoUrl(id)}")
     @robot.http("#{@todoUrl(id)}")
-      .auth(user,pass)
+      .auth(process.env.BASECAMP_USERNAME,process.env.BASECAMP_PASSWORD)
       .header("Content-Type", "application/json")
-      .put(@closeTodoBody())(@responseHandler)
-
+      .put(@closeTodoBody()) (err, res, body) =>
+        fail = (why) =>
+          cb(why) if _.isFunction(cb)
+          @robot.logger.error("Error  closing todo: #{why}")
+        win = =>
+          cb(null, true) if  _.isFunction(cb)
+          @robot.logger.debug("TODO closed!")
+        return fail(err) if err
+        sc = res.statusCode
+        return fail("Basecamp returned status #{sc} #{STATUS_CODES[sc]}") if sc != 200
+        win()
   
   todoUrl: (id) =>
     "https://basecamp.com/#{process.env.HUBOT_BASECAMP_ACCOUNT}" + 
@@ -101,7 +127,6 @@ class GithubBasecampTodos
     JSON.stringify({completed:true})
     
   responseHandler: (err, res, body) =>
-    @robot.logger.debug "response from basecamp:#{err},#{res.statusCode}\n#{res.body}"
     if err
       @robot.logger.error "Error #{err} while closing todo"
     if res.statusCode != 200

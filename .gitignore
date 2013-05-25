@@ -3,3 +3,4 @@ bin/campfire
 node_modules
 .idea
 .env
+.kateproject.d

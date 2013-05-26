@@ -59,7 +59,7 @@ class GithubBasecampTodos
     @finishTodos()
   
   finishTodos: =>
-    @robot.logger.debug "finishTodos in #{Util.inspect @payload}"
+    # @robot.logger.debug "finishTodos in #{Util.inspect @payload}"
     # don't mess commits up for other listeners!
     commits = _.clone(@payload.commits || [])
     if @payload.head_commit?

@@ -7,12 +7,11 @@ To make it easy to create and modify Hubot plugins, we have created the Hubot re
 # Conjur Hubot Changelog
 
 * Added relay.coffee
-* This is A TEST
 * Added Github integration
-* Testing Hubot commit message
-* Testing it again and again :)
-# Hubot
+* Added Basecamp integration
+* Improved Github commits script
 
+# Hubot
 This is a version of GitHub's Campfire bot, hubot. He's pretty cool.
 
 This version is designed to be deployed on [Heroku][heroku].

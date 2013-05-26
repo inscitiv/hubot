@@ -2,3 +2,4 @@
 bin/campfire
 node_modules
 .idea
+.env

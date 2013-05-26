@@ -54,15 +54,17 @@ module.exports = (robot) ->
       for commit in commits 
         do (commit) ->
           robot.logger.debug "trying gitio on #{commit.url}"
-          
-          gitio commit.url, (err, data) ->
-            robot.logger.debug "got #{err}, #{data} from gitio(#{commit.url})"
-            {added, removed, modified} = commit
-            lines.push "  * #{commit.author.name}: #{commit.message} (#{data})"
-            format_files(lines, "     added: ", added)
-            format_files(lines, "     removed: ", removed)
-            format_files(lines, "     modified:", modified)
-            
+          robot.http('http://git.io/')
+               .header('Content-Type', 'application/x-www-form-urlencoded')
+               .post("url=#{commit.url}") (err, res, body) ->
+                 gitio = res.headers.location
+                 rovot.logger.debug "gitio resp: #{err},#{res},#{body}, => #{gitio}"
+                 {added, removed, modified} = commit
+                 lines.push " * #{commit.author.name}: #{commit.message} (#{gitio})"
+                format_files(lines, "     added: ", added)
+                format_files(lines, "     removed: ", removed)
+                format_files(lines, "     modified:", modified)
+                
             count += 1
             if count == commits.length
               robot.send user, lines.join("\n") 

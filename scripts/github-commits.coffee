@@ -65,10 +65,9 @@ module.exports = (robot) ->
                   format_files(lines, "     added: ", added)
                   format_files(lines, "     removed: ", removed)
                   format_files(lines, "     modified:", modified)
-                
-            count += 1
-            if count == commits.length
-              robot.send user, lines.join("\n") 
+                  count += 1
+                  if count == commits.length
+                    robot.send user, lines.join("\n") 
     else
       if push.created
         robot.send user, "#{push.pusher.name} created: #{push.ref}: #{push.base_ref}"

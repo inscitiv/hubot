@@ -33,6 +33,7 @@ module.exports = (robot) ->
     user = {}
     user.room = query.room if query.room
     user.type = query.type if query.type
+    robot.logger.debug "and I'm gonna spam into #{user.room} as #{user.type}!"
 
     push = JSON.parse req.body.payload
 

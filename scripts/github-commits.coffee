@@ -53,7 +53,10 @@ module.exports = (robot) ->
       count = 0
       for commit in commits 
         do (commit) ->
+          robot.logger.debug "trying gitio on #{commit.url}"
+          
           gitio commit.url, (err, data) ->
+            robot.logger.debug "got #{err}, #{data} from gitio(#{commit.url})"
             {added, removed, modified} = commit
             lines.push "  * #{commit.author.name}: #{commit.message} (#{data})"
             format_files(lines, "     added: ", added)

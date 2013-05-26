@@ -81,7 +81,7 @@ class GithubBasecampTodos
       @spam "Got commit with magic text, trying to complete the basecamp todo #{id}"
       @closeTodo id, (err, res) =>
         if err
-          @robot.loger.error("Closing todo: #{err}")
+          @robot.logger.error("Closing todo: #{err}")
           @spam "Oh hamburgers! I couldn't complete TODO #{id} because of #{err}"
         else
           @spam "Hooray, TODO #{id} is complete!"

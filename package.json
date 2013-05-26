@@ -25,9 +25,9 @@
 
   "dependencies": {
     "hubot":         ">= 2.5.0",
-    "hubot-scripts": ">= 2.4.2",
-    "gitio": "latest",
-    "underscore": "latest"
+    "hubot-scripts": ">= 2.4.2", 
+    "gitio": ">= 1.0.1",
+    "underscore": ">= 1.4.4"
   },
 
   "engines": {

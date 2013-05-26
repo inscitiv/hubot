@@ -7,6 +7,7 @@ To make it easy to create and modify Hubot plugins, we have created the Hubot re
 # Conjur Hubot Changelog
 
 * Added relay.coffee
+* This is A TEST
 * Added Github integration
 * Testing Hubot commit message
 * Testing it again and again :)

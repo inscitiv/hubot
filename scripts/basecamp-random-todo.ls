@@ -58,7 +58,7 @@ contains = (pattern, str) -->
   !!str.match(new RegExp pattern, 'i')
 
 operations = ->
-  @hear /what ((.*) )?to do\?/i, (msg)->
+  @hear /what ((.*) )?to do\??/i, (msg)->
     todos <- basecamp(msg.robot.http).remaining-todos!
     pattern = msg.match[2]
     todos = todos |> filter ((.content) >> contains pattern) if pattern

@@ -14,24 +14,20 @@
 #   HUBOT_BASECAMP_PROJECT      -  Your basecamp project, 22222222 in the above url
 #
 # Commands:
+#   What <pattern> to do? -- picks a random todo matching an optional pattern and assigned to yourself or nobody.
 #
 # URLS:
 #
 # Authors:
 #   divide
 
-HttpClient     = require 'scoped-http-client'
 require! async
 {map, flatten, filter} = require 'prelude-ls'
 
-const leisure = [
-  "a nice cup of coffee",
-  "a relaxing walk in the park",
+const leisure =
+  "a nice cup of coffee"
+  "a relaxing walk in the park"
   "a lunch break"
-]
-
-http = (url) -> HttpClient.create(url)\
-    .header('User-Agent', "Hubot/#{@version}")
 
 choose_random = (list) ->
   index = Math.floor Math.random! * list.length
@@ -71,7 +67,5 @@ operations = ->
     ) |> map format-todo
     todo = choose_random todos ++ leisure
     msg.send "#{msg.message.user.name}, how about #{todo}?"
-
-  @respond /test/i, (msg)-> console.log msg
 
 module.exports = -> operations.call it

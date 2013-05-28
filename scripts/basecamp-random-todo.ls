@@ -63,7 +63,7 @@ operations = ->
     pattern = msg.match[2]
     todos = todos |> filter ((.content) >> contains pattern) if pattern
     todos = todos |> filter ((todo) ->
-      !todo.assignee? || todo.assignee.id == msg.message.user.id
+      !todo.assignee? || (todo.assignee.name == msg.message.user.name)
     ) |> map format-todo
     todo = choose_random todos ++ leisure
     msg.send "#{msg.message.user.name}, how about #{todo}?"

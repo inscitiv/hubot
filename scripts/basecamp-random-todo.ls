@@ -22,7 +22,7 @@
 #   divide
 
 require! async
-{map, flatten, filter} = require 'prelude-ls'
+{map, flatten, filter, words, first} = require 'prelude-ls'
 
 const leisure =
   "a nice cup of coffee"
@@ -52,7 +52,7 @@ basecamp = (http) ->
 api-to-ui-url = (- /api\/v1\//) >> (- /\.json$/)
 
 format-todo = (todo) ->
-  "#{todo.content} <#{api-to-ui-url todo.url}>"
+  "#{todo.content} : #{api-to-ui-url todo.url} "
 
 contains = (pattern, str) -->
   !!str.match(new RegExp pattern, 'i')
@@ -66,6 +66,6 @@ operations = ->
       !todo.assignee? || (todo.assignee.name == msg.message.user.name)
     ) |> map format-todo
     todo = choose_random todos ++ leisure
-    msg.send "#{msg.message.user.name}, how about #{todo}?"
+    msg.send "#{first words msg.message.user.name}, how about #{todo}?"
 
 module.exports = -> operations.call it

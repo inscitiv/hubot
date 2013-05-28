@@ -22,7 +22,7 @@
 
 HttpClient     = require 'scoped-http-client'
 require! async
-{map, flatten} = require 'prelude-ls'
+{map, flatten, filter} = require 'prelude-ls'
 
 http = (url) -> HttpClient.create(url)\
     .header('User-Agent', "Hubot/#{@version}")
@@ -47,14 +47,19 @@ basecamp = (http) ->
       results |> map ((.1) >> JSON.parse >> (.todos.remaining)) |> flatten |> cb
   }
 
-api-to-ui-url = (.replace /api\/v1\//,'') >> (.replace /\.json$/,'')
+api-to-ui-url = (- /api\/v1\//) >> (- /\.json$/)
 
 format-todo = (todo) ->
   "#{todo.content} <#{api-to-ui-url todo.url}>"
 
+contains = (pattern, str) -->
+  !!str.match(new RegExp pattern, 'i')
+
 operations = ->
-  @respond /todo/i, (msg)->
+  @hear /what ((.*) )?to do\?/i, (msg)->
     todos <- basecamp(msg.robot.http).remaining-todos!
+    pattern = msg.match[2]
+    todos = todos |> filter ((.content) >> contains pattern) if pattern
     todo = choose_random todos
     console.log todo
     msg.send format-todo todo

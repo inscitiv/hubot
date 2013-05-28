@@ -29,7 +29,8 @@
     "hubot-scripts": ">= 2.4.2", 
     "gitio": ">= 1.0.1",
     "underscore": ">= 1.4.4",
-    "LiveScript" : ">= 1.1.1"
+    "LiveScript" : ">= 1.1.1",
+    "async": ">= 0.2.9"
   },
 
   "engines": {

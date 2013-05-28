@@ -60,8 +60,13 @@ operations = ->
     todos <- basecamp(msg.robot.http).remaining-todos!
     pattern = msg.match[2]
     todos = todos |> filter ((.content) >> contains pattern) if pattern
+    todos = todos |> filter (todo) ->
+      !todo.assignee? || todo.assignee.id == msg.message.user.id
     todo = choose_random todos
     console.log todo
     msg.send format-todo todo
+    console.log
+
+  @respond /test/i, (msg)-> console.log msg
 
 module.exports = -> operations.call it

@@ -24,6 +24,12 @@ HttpClient     = require 'scoped-http-client'
 require! async
 {map, flatten, filter} = require 'prelude-ls'
 
+const leisure = [
+  "a nice cup of coffee",
+  "a relaxing walk in the park",
+  "a lunch break"
+]
+
 http = (url) -> HttpClient.create(url)\
     .header('User-Agent', "Hubot/#{@version}")
 
@@ -60,12 +66,11 @@ operations = ->
     todos <- basecamp(msg.robot.http).remaining-todos!
     pattern = msg.match[2]
     todos = todos |> filter ((.content) >> contains pattern) if pattern
-    todos = todos |> filter (todo) ->
+    todos = todos |> filter ((todo) ->
       !todo.assignee? || todo.assignee.id == msg.message.user.id
-    todo = choose_random todos
-    console.log todo
-    msg.send format-todo todo
-    console.log
+    ) |> map format-todo
+    todo = choose_random todos ++ leisure
+    msg.send "#{msg.message.user.name}, how about #{todo}?"
 
   @respond /test/i, (msg)-> console.log msg
 

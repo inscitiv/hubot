@@ -70,7 +70,7 @@ operations = ->
     todos = todos |> filter ((todo) ->
       !todo.assignee? || (todo.assignee.name == msg.message.user.name)
     )
-    todo = choose_random todos ++ leisure
+    todo = choose_random todos ++ choose_random leisure
     msg.robot.brain.set \last-todo, todo
     msg.send "#{first words msg.message.user.name}, how about #{format-todo todo}?"
 

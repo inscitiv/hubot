@@ -38,7 +38,8 @@ basecamp = (http) ->
   password = process.env.BASECAMP_PASSWORD
   base_url = "https://basecamp.com/#{process.env.HUBOT_BASECAMP_ACCOUNT}/api/v1/"
   http = http(base_url).auth(username, password)
-  get = (path) -> http.scope(path).get!
+  scope = (path) -> http.scope(path)
+  get = scope >> (.get!)
 
   {
     todolists: (cb) -> get('todolists.json')(-> cb JSON.parse(&.2))
@@ -47,12 +48,16 @@ basecamp = (http) ->
       lists <- @todolists!
       (err, results) <- async.parallel (lists |> map (.url) |> map get)
       results |> map ((.1) >> JSON.parse >> (.todos.remaining)) |> flatten |> cb
+
+    delete-todo: (todo, cb) ->
+      (res, resp, body) <- scope(todo).delete!!
+      cb (resp.statusCode < 300)
   }
 
 api-to-ui-url = (- /api\/v1\//) >> (- /\.json$/)
 
 format-todo = (todo) ->
-  "#{todo.content} : #{api-to-ui-url todo.url} "
+  todo.content && "#{todo.content} : #{api-to-ui-url todo.url} " || todo
 
 contains = (pattern, str) -->
   !!str.match(new RegExp pattern, 'i')
@@ -64,8 +69,21 @@ operations = ->
     todos = todos |> filter ((.content) >> contains pattern) if pattern
     todos = todos |> filter ((todo) ->
       !todo.assignee? || (todo.assignee.name == msg.message.user.name)
-    ) |> map format-todo
+    )
     todo = choose_random todos ++ leisure
-    msg.send "#{first words msg.message.user.name}, how about #{todo}?"
+    msg.robot.brain.set \last-todo, todo
+    msg.send "#{first words msg.message.user.name}, how about #{format-todo todo}?"
+
+  @respond /nuke it/i, (msg) ->
+    todo = msg.robot.brain.get \last-todo
+    if (todo?.url?)
+      ok <- basecamp(msg.robot.http).delete-todo todo
+      if ok
+        msg.send "#{todo.content} is no more!"
+        msg.robot.brain.set \last-todo, void
+      else
+        msg.send "no proliferation"
+    else
+      msg.send "I honestly have no idea what you're talking about"
 
 module.exports = -> operations.call it

@@ -17,7 +17,7 @@
 #   HUBOT_TODOS_ROOMS   - A comma separated list of room ids where we anounce completed todos.
 #                         Leave this blank if you don't want to hear about that.
 # Commands:
-#   None
+#   None 
 #
 # URLS:
 #   POST /hubot/gh-basecamp-todos
@@ -31,6 +31,15 @@
 Util = require 'util'
 {STATUS_CODES}= require 'http'
 _ = require 'underscore'
+
+gitio = (robot, commitUrl, cb) ->
+  robot.http('http://git.io/')
+     .header('Content-Type', 'application/x-www-form-urlencoded')
+     .post("url=#{commitUrl}") (err, res, body) ->
+        gitio = res.headers.location
+        if err or res.statusCode >= 400
+          return cb(err or new Error("HTTP error #{res.statusCode}"))
+        cb(null, gitio)
 
 class GithubBasecampTodos
   constructor: (@robot) ->
@@ -52,7 +61,7 @@ class GithubBasecampTodos
     res.end()
     @payload = req.body?.payload
     return @robot.logger.error "no payload in github post #{Util.inspect req.body}" unless @payload?
-    @payload = JSON.parse payload
+    @payload = JSON.parse @payload
     @finishTodos()
   
   eventHandler: (@payload) =>
@@ -77,31 +86,75 @@ class GithubBasecampTodos
     _.each commits, @processCommit
     @todoIds = _.uniq @todoIds, _.identity
     @robot.logger.debug "got #{Util.inspect @todoIds} todos"
-    _.each @todoIds, (id) =>
-      @spam "Got commit with magic text, trying to complete the basecamp todo #{id}"
-      @closeTodo id, (err, res) =>
+    _.each @todoIds, (todo) =>
+      @closeTodo todo.todoId, (err, res) =>
         if err
-          @robot.logger.error("Closing todo: #{err}")
-          @spam "Oh hamburgers! I couldn't complete TODO #{id} because of #{err}"
+          @robot.logger.error("Closing todo #{todo.todoId}: #{err}") 
+          @robot.logger.error(err)
         else
-          @spam "Hooray, TODO #{id} is complete!"
+          @todoClosed todo, res
 
   spam: (text, room) =>
     if arguments.length < 2
       rooms = process.env.HUBOT_TODO_ROOMS?.split(',')
-      if rooms?.length
-        rooms.forEach (room) =>
-          @spam(text, room)
+      if not rooms? or rooms.length == 0
+        rooms = ["Shell"]
+      
+      rooms.forEach (room) =>
+        @spam(text, room)
     else
+      @robot.logger.debug("saying \"#{text}\" in #{room}")
       user = {room : room}
       @robot.send user, text
 
   processCommit: (commit) =>
-    hot_text = /BC#(\d+)/ig 
+    hot = /BC#(\d+)/ig 
     if (msg = commit.message)?
-      while (match = hot_text.exec(msg))?
-        @todoIds.push match[1]
+      while (match = hot.exec(msg))?
+        @todoIds.push {commit:commit, todoId:match[1]}
+  
+  todoClosed: (todo, todoInfo) =>
+    {todoId, commit} = todo
+    gitio @robot, commit.url, (err, url) =>
+      if err
+        return @robot.logger.error("gitio failed #{err}, #{commit}")
+      message = "Commit #{url} by #{commit.author.name} closed todo\n
+\t#{todoInfo.content}\n
+\t#{todoInfo.url}" 
+
+      todo.body = todoInfo
+      todo.gitio = url
+      @addComment todo, (err)=>
+        unless err
+          @spam(message)
+
+  addComment: (todo, cb) =>
+    cb ?= ->
+    sep = "\n\t" #???
+    comment = 
+      content: "Closed by #{todo.gitio}<br/>
+      <pre>* #{todo.commit.author.name} - #{todo.commit.message}</pre>"
+
+    @robot.http(@todoCommmentUrl(todo.todoId))
+      .auth(process.env.BASECAMP_USERNAME,process.env.BASECAMP_PASSWORD)
+      .header("Content-Type", "application/json")
+      .post(JSON.stringify(comment)) (err,res,body) =>
+        if err
+          @robot.logger.error("error adding comment")
+          @robot.logger.error(err)
+          cb(err)
+        else if res?.statusCode >= 400
+          @robot.logger.error("got status #{res.statusCode}")
+          cb(new Error("HTTP status #{res.statusCode}"))
+        else
+          @robot.logger.debug("saved comment", body)
+          cb() 
+
+  todoCommmentUrl: (todoId) =>
+    "https://basecamp.com/#{process.env.HUBOT_BASECAMP_ACCOUNT}" + 
+      "/api/v1/projects/#{process.env.HUBOT_BASECAMP_PROJECT}/todos/#{todoId}/comments.json"
     
+
   closeTodo: (id, cb) =>
     @robot.logger.debug("Closing Basecamp TODO: #{@todoUrl(id)}")
     @robot.http("#{@todoUrl(id)}")
@@ -112,8 +165,9 @@ class GithubBasecampTodos
           cb(why) if _.isFunction(cb)
           @robot.logger.error("Error  closing todo: #{why}")
         win = =>
-          cb(null, true) if  _.isFunction(cb)
+          cb(null, if _.isString(body) then JSON.parse(body) else body) if  _.isFunction(cb)
           @robot.logger.debug("TODO closed!")
+          @robot.logger.debug(body)
         return fail(err) if err
         sc = res.statusCode
         return fail("Basecamp returned status #{sc} #{STATUS_CODES[sc]}") if sc != 200

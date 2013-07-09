@@ -62,8 +62,8 @@ module.exports = (robot) ->
                   robot.logger.debug "gitio resp: #{err},#{res},#{body}, => #{gitio}"
                   {added, removed, modified} = commit
                   lines.push " * #{commit.author.name}: #{commit.message} (#{gitio})"
-                  format_files(lines, "     added: ", added)
                   format_files(lines, "     removed: ", removed)
+                  format_files(lines, "     added: ", added)
                   format_files(lines, "     modified:", modified)
                   count += 1
                   if count == commits.length

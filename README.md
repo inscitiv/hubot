@@ -11,6 +11,7 @@ To make it easy to create and modify Hubot plugins, we have created the Hubot re
 * Added Basecamp integration
 * Improved Github commits script
 * Random todo picker
+* Improved basecamp integration (add a comment to the todo, nicer message in chat)
 
 # Hubot
 This is a version of GitHub's Campfire bot, hubot. He's pretty cool.

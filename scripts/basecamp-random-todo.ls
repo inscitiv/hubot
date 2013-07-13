@@ -47,7 +47,12 @@ basecamp = (http) ->
     remaining-todos: (cb) ->
       lists <- @todolists!
       (err, results) <- async.parallel (lists |> map (.url) |> map get)
-      results |> map ((.1) >> JSON.parse >> (.todos.remaining)) |> flatten |> cb
+      todolists = results |> map ((.1) >> JSON.parse)
+      todos = todolists.map ((list) ->
+        list.todos.remaining |> map ->
+          (it.list = list.name; it) # add list name to todos
+      ) |> flatten
+      todos |> cb
 
     delete-todo: (todo, cb) ->
       (res, resp, body) <- scope(todo).delete!!
@@ -66,7 +71,9 @@ operations = ->
   @hear /what ((.*) )?to do\??/i, (msg)->
     todos <- basecamp(msg.robot.http).remaining-todos!
     pattern = msg.match[2]
-    todos = todos |> filter ((.content) >> contains pattern) if pattern
+    if pattern then todos = todos |> filter ((todo) ->
+      (todo.content |> contains pattern) || (todo.list |> contains pattern)
+    )
     todos = todos |> filter ((todo) ->
       !todo.assignee? || (todo.assignee.name == msg.message.user.name)
     )

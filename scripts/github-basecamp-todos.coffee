@@ -108,9 +108,10 @@ class GithubBasecampTodos
       @robot.send user, text
 
   processCommit: (commit) =>
-    hot = /BC#(\d+)/ig 
+    hot = /BC#(\d+)/ig
+    branch = @payload.ref.replace(/refs\/heads\/?/, '')
     if (msg = commit.message)?
-      while (match = hot.exec(msg))?
+      while (match = hot.exec(msg))? and (branch is "master" or branch is "integration")
         @todoIds.push {commit:commit, todoId:match[1]}
   
   todoClosed: (todo, todoInfo) =>

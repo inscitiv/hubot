@@ -110,8 +110,8 @@ class GithubBasecampTodos
   processCommit: (commit) =>
     hot = /BC#(\d+)/ig
     branch = @payload.ref.replace(/refs\/heads\/?/, '')
-    if (msg = commit.message)?
-      while (match = hot.exec(msg))? and (branch is "master" or branch is "integration")
+    if (msg = commit.message)? and (branch is "master" or branch is "integration")
+      while (match = hot.exec(msg))?
         @todoIds.push {commit:commit, todoId:match[1]}
   
   todoClosed: (todo, todoInfo) =>

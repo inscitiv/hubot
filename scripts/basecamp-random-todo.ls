@@ -73,7 +73,7 @@ operations = ->
   @hear /what ((.*) )?to do\?/i, (msg)->
     todos <- basecamp(msg.robot.http).remaining-todos!
     pattern = msg.match[2]
-    return if (words pattern).length > MAX_PATTERN_WORDS if typeof(pattern) != "undefined"
+    return if (words pattern || []).length > MAX_PATTERN_WORDS
     if pattern then todos = todos |> filter ((todo) ->
       (todo.content |> contains pattern) || (todo.list |> contains pattern)
     )

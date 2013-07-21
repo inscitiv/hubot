@@ -11,10 +11,10 @@
 #
 #   * You can get these from a url like https://basecamp.com/11111111/projects/22222222-my-project-name
 #   HUBOT_BASECAMP_ACCOUNT      -  Your basecamp account, 11111111 in the above url
-#   HUBOT_BASECAMP_PROJECT      -  Your basecamp project, 22222222 in the above url
 #
 # Commands:
 #   What <pattern> to do? -- picks a random todo matching an optional pattern and assigned to yourself or nobody.
+#   hubot, nuke it -- DELETES the todo chosen by the robot
 #
 # URLS:
 #

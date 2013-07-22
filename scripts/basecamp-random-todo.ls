@@ -22,7 +22,7 @@
 #   divide
 
 require! async
-{map, flatten, filter, words, first} = require 'prelude-ls'
+{map, flatten, filter, words, first, any, zip-with} = require 'prelude-ls'
 
 const leisure =
   "a nice cup of coffee"
@@ -46,12 +46,15 @@ basecamp = (http) ->
 
     remaining-todos: (cb) ->
       lists <- @todolists!
+      projects = lists.map (.bucket.name)
       (err, results) <- async.parallel (lists |> map (.url) |> map get)
       todolists = results |> map ((.1) >> JSON.parse)
-      todos = todolists.map ((list) ->
-        list.todos.remaining |> map ->
-          (it.list = list.name; it) # add list name to todos
-      ) |> flatten
+      todos = flatten zip-with ((project, list) ->
+        list.todos.remaining |> map (todo) ->
+          todo <<<
+            list: list.name
+            project: project
+      ), projects, todolists
       todos |> cb
 
     delete-todo: (todo, cb) ->
@@ -75,11 +78,12 @@ operations = ->
     pattern = msg.match[2]
     return if (words pattern || []).length > MAX_PATTERN_WORDS
     if pattern then todos = todos |> filter ((todo) ->
-      (todo.content |> contains pattern) || (todo.list |> contains pattern)
+      any (contains pattern), todo<[content list project]>
     )
     todos = todos |> filter ((todo) ->
       !todo.assignee? || (todo.assignee.name == msg.message.user.name)
     )
+
     todo = choose_random todos ++ choose_random leisure
     msg.robot.brain.set \last-todo, todo
     msg.send "#{first words msg.message.user.name}, how about #{format-todo todo}?"

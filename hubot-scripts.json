@@ -3,5 +3,6 @@
     "http-say.coffee",
     "http-post-say.coffee",
     "jenkins.coffee",
-    "script.coffee"
+    "script.coffee",
+    "polite.coffee"
 ]

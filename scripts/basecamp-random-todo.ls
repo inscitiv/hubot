@@ -67,10 +67,17 @@ format-todo = (todo) ->
 contains = (pattern, str) -->
   !!str.match(new RegExp pattern, 'i')
 
+# http://en.wikipedia.org/wiki/You_talkin'_to_me%3F
+youTalkinToMe = (msg) ->
+  input = msg.message.text.toLowerCase!
+  name = msg.robot.name.toLowerCase!
+  input.indexOf(name) != -1
+
 const MAX_PATTERN_WORDS = 3
 
 operations = ->
   @hear /what ((.*) )?to do\??/i, (msg)->
+    return unless youTalkinToMe msg
     todos <- basecamp(msg.robot.http).remaining-todos!
     pattern = msg.match[2]
     return if (words pattern || []).length > MAX_PATTERN_WORDS

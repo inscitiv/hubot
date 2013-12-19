@@ -27,7 +27,8 @@
     "underscore": ">= 1.4.4",
     "LiveScript": ">= 1.1.1",
     "async": ">= 0.2.9",
-    "prelude-ls": ">= 1.0"
+    "prelude-ls": ">= 1.0",
+    "scraper": "0.0.9"
   },
   "engines": {
     "node": ">= 0.10.x",

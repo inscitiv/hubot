@@ -74,25 +74,41 @@ youTalkinToMe = (msg) ->
   input.indexOf(name) != -1
 
 const MAX_PATTERN_WORDS = 3
+const MAX_RELATED_MS = 5 * 60 * 1000
+
+give-random-todo = (msg, pattern) ->
+  todos <- basecamp(msg.robot.http).remaining-todos!
+  if pattern then todos = todos |> filter ((todo) ->
+    (todo.content |> contains pattern) || (todo.list |> contains pattern)
+  )
+  todos = todos |> filter ((todo) ->
+    !todo.assignee? || (todo.assignee.name == msg.message.user.name)
+  )
+  todo = choose_random todos ++ choose_random leisure
+  msg.robot.brain.set \basecamp-random-todo, do
+    todo: todo
+    user: msg.message.user
+    pattern: pattern
+    time: Date.now!
+  msg.send "#{first words msg.message.user.name}, how about #{format-todo todo}?"
 
 operations = ->
   @hear /what ((.*) )?to do\??/i, (msg)->
     return unless youTalkinToMe msg
-    todos <- basecamp(msg.robot.http).remaining-todos!
     pattern = msg.match[2]
     return if (words pattern || []).length > MAX_PATTERN_WORDS
-    if pattern then todos = todos |> filter ((todo) ->
-      (todo.content |> contains pattern) || (todo.list |> contains pattern)
-    )
-    todos = todos |> filter ((todo) ->
-      !todo.assignee? || (todo.assignee.name == msg.message.user.name)
-    )
-    todo = choose_random todos ++ choose_random leisure
-    msg.robot.brain.set \last-todo, todo
-    msg.send "#{first words msg.message.user.name}, how about #{format-todo todo}?"
+    give-random-todo msg, pattern
+
+  @hear /something else/i, (msg) ->
+    last = msg.robot.brain.get \basecamp-random-todo
+    return if Date.now! - last.time > MAX_RELATED_MS
+    return unless msg.message.user == last.user
+    give-random-todo msg, last.pattern
 
   @respond /nuke it/i, (msg) ->
-    todo = msg.robot.brain.get \last-todo
+    last = msg.robot.brain.get \basecamp-random-todo
+    return if Date.now! - last.time > MAX_RELATED_MS
+    todo = last.todo
     if (todo?.url?)
       ok <- basecamp(msg.robot.http).delete-todo todo
       if ok
